@@ -9,7 +9,7 @@ t_path = r'.\Tesseract-OCR\tesseract.exe'
 class Image:
 
 	def __init__(self):
-		#path to 
+		
 		#image data .jpg openCV array
 		self.image_data = None
 		#metadata
@@ -24,24 +24,33 @@ class Image:
 		#path to tesseract.exe
 		self.t_path = None
 
-	def get_image(image_path):
+	def get_image(self, image_path):
+		"""Stores image data in the image data parameter of the Image class
+		
+		Takes a path to the .jpg file
+		"""
 
 		try:
 			self.image_data = cv2.imread(image_path)
-		except:
-			return -1
+		except RuntimeError:
+			print('Image read error: image data not read, possible image path error')
 
-	def get_camera_and_date():
-		camera_number = int()
-		date_time = datetime.datetime() 
-		try:
-			camera_number, date_time = __read_image(self.image_data)
-		except:
-			return -1
-		self.camera_number = camera_number
-		self.datetime = 
+	def display_image(self, window_name):
+		if type(window_name) == str:
+			if self.image_data.any() != None:
+				try: 
+					cv2.imshow(window_name, self.image_data)
+					cv2.waitKey(0)
+					cv2.destroyAllWindows()
+				except RuntimeError:
+					print('Image display error: cv2.imshow() unable to display image')
+				
+			else:
+				print('Display image failed: no image data detected')
+		else:
+			raise TypeError('Window name not a string data type')
 
-	def __mask_top(image_array, slice_divisor = 1):
+	def __mask_top(self, image_array, slice_divisor = 1):
 		"""Takes a gray image and returns it with the top portion set to 255
 	
 		The "slice_divisor" value sets the size of the unmasked portion by taking
@@ -64,24 +73,32 @@ class Image:
 
 		return mask
 
-	def __read_image(image_path, tesseract_path = t_path, divisor = 1):
+	def __parse_image_text(self, text_list):
+
+		camera_number = 0
+		y, m, d, h, m, s = 1, 1, 1, 1, 1, 1
+
+		date_time = datetime.datetime(year=y, month=m, day=d, hour=h, minute=m, second=s)
+
+		return camera_number, date_time
+
+	def __read_image(self, tesseract_path=t_path, divisor=16):
 		""" Uses openCV and tesseract to read text in an image
 
 		Takes an image array and the full path to the tesseract.exe file and outputs 
 		a list of strings of the recognized text
 		"""
 
-		raw_text = list()
-
 		# Mention the installed location of Tesseract-OCR in your system 
 		pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
-		image_array = cv2.imread(image_path)
-
-		gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY) 
+		try:
+			gray = cv2.cvtColor(self.image_data, cv2.COLOR_BGR2GRAY)
+		except RuntimeError:
+			print('Color conversion error: make sure image is loaded')
 
 		# Crop image to leave only bottom portion according to the divsor
-		masked_image = __mask_top(gray, slice_divisor=divisor)
+		masked_image = self.__mask_top(gray, slice_divisor=divisor)
 
 		# Performing gausian thresholding 
 		ret, thresh1 = cv2.threshold(masked_image, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU) 
@@ -99,11 +116,14 @@ class Image:
 		# Finding contours 
 		contours, hierarchy = cv2.findContours(dilation, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) 
 
-		im2 = image_array.copy() 
+		im2 = self.image_data.copy() 
 
 		# Looping through the identified contours 
 		# Then rectangular part is cropped and passed on 
-		# to pytesseract for extracting text from it 
+		# to pytesseract for extracting text from it
+
+		raw_text = list()
+
 		for cnt in contours: 
 			x, y, w, h = cv2.boundingRect(cnt) 
 	
@@ -116,13 +136,22 @@ class Image:
 			# Appending the text into a list
 			raw_text.append(text)
 
-		return raw_text
-
-	def __parse_image_text(text_list):
-
-		camera_number = 0
-		y, m, d, h, m, s = 0, 0, 0, 0, 0, 0
-
-		date_time = datetime.datetime(year=y, month=m, day=d, hour=h, minute=m, second=s)
+		try:
+			camera_number, date_time = self.__parse_image_text(text)
+		except RuntimeError:
+			print('Text parsing error: unable to read camera number and date/ time from text within image')
 
 		return camera_number, date_time
+
+	def get_camera_and_date(self):
+		try:
+			camera_number, date_time = self.__read_image()
+		except RuntimeError:
+			print('Text recognition of image failed: make sure image is loaded and has camera # and date in it')
+		self.camera_number = camera_number
+		self.datetime = date_time
+
+
+
+	
+
