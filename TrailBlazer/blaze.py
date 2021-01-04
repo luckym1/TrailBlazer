@@ -74,27 +74,20 @@ class Image:
 
 		return mask
 
-
-	#https://www.vipinajayakumar.com/parsing-text-with-python/
 	def __parse_image_text(self, text_list):
 
-		rx_dict = {
-    'CAMERA': re.compile(r'CAMERA = (?P<CAMERA>CAMERA \d\d)'),
-    'grade': re.compile(r'Grade = (?P<grade>\d+)\n'),
-    'name_score': re.compile(r'(?P<name_score>Name|Score)'),
-}
+		camera_raw = re.findall("CAMERA \d+", text_list)
+		date = re.findall("\d\d-\d\d-\d\d\d\d", text_list)
+		time = re.findall("\d\d:\d\d:\d\d", text_list)
 
-		for key, rx in rx_dict.items():
-			match = rx.search(line)
-			if match:
-				pass
+		camera_number = re.findall("\d+", camera_raw[0])
 
-		camera_number = 0
-		y, m, d, h, m, s = 1, 1, 1, 1, 1, 1
+		mon, d, y = re.split('-', date[0])
+		h, min, s = re.split(':', time[0])
 
-		date_time = datetime.datetime(year=y, month=m, day=d, hour=h, minute=m, second=s)
+		date_time = datetime.datetime(year=int(y), month=int(mon), day=int(d), hour=int(h), minute=int(min), second=int(s))
 
-		return camera_number, date_time
+		return int(camera_number[0]), date_time
 
 	def __read_image(self, tesseract_path=t_path, divisor=16):
 		""" Uses openCV and tesseract to read text in an image
@@ -149,8 +142,6 @@ class Image:
 	
 			# Appending the text into a list
 			raw_text.append(text)
-
-		print(raw_text)
 
 		try:
 			camera_number, date_time = self.__parse_image_text(text)

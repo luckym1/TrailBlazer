@@ -9,12 +9,7 @@ sample = r'.\sample.jpg'
                                                                                 
 im1 = Image()
 
-im1.get_image(bob_cat)
-im1.get_camera_and_date()
 im1.get_image(doe)
-im1.get_camera_and_date()
-im1.get_image(sample)
-im1.get_camera_and_date()
 #im1.display_image('test')
 
 print('Camera number:')
