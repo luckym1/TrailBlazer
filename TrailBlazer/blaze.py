@@ -76,11 +76,14 @@ class Image:
 
 	def __parse_image_text(self, text_list):
 
-		camera_raw = re.findall("CAMERA \d+", text_list)
-		date = re.findall("\d\d-\d\d-\d\d\d\d", text_list)
-		time = re.findall("\d\d:\d\d:\d\d", text_list)
+		try:
+			camera_raw = re.findall("CAMERA \d+", text_list)
+			date = re.findall("\d\d-\d\d-\d\d\d\d", text_list)
+			time = re.findall("\d\d:\d\d:\d\d", text_list)
 
-		camera_number = re.findall("\d+", camera_raw[0])
+			camera_number = re.findall("\d+", camera_raw[0])
+		except:
+			return None, None
 
 		mon, d, y = re.split('-', date[0])
 		h, min, s = re.split(':', time[0])
