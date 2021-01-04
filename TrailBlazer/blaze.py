@@ -2,6 +2,7 @@ import cv2
 import pytesseract
 import numpy as np
 import datetime
+import re
 
 #Path to tesseract.exe
 t_path = r'.\Tesseract-OCR\tesseract.exe'
@@ -75,12 +76,18 @@ class Image:
 
 	def __parse_image_text(self, text_list):
 
-		camera_number = 0
-		y, m, d, h, m, s = 1, 1, 1, 1, 1, 1
+		camera_raw = re.findall("CAMERA \d+", text_list)
+		date = re.findall("\d\d-\d\d-\d\d\d\d", text_list)
+		time = re.findall("\d\d:\d\d:\d\d", text_list)
 
-		date_time = datetime.datetime(year=y, month=m, day=d, hour=h, minute=m, second=s)
+		camera_number = re.findall("\d+", camera_raw[0])
 
-		return camera_number, date_time
+		mon, d, y = re.split('-', date[0])
+		h, min, s = re.split(':', time[0])
+
+		date_time = datetime.datetime(year=int(y), month=int(mon), day=int(d), hour=int(h), minute=int(min), second=int(s))
+
+		return int(camera_number[0]), date_time
 
 	def __read_image(self, tesseract_path=t_path, divisor=16):
 		""" Uses openCV and tesseract to read text in an image
